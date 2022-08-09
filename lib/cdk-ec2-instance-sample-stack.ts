@@ -39,8 +39,7 @@ export class CdkEc2InstanceSampleStack extends Stack {
             new iam.PolicyStatement({
               effect: iam.Effect.ALLOW,
               actions: [
-                'dynamodb:DescribeTable',
-                'dynamodb:ListTables'
+                'ec2-instance-connect:SendSerialConsoleSSHPublicKey'
               ],
               resources: ['*']
             })
