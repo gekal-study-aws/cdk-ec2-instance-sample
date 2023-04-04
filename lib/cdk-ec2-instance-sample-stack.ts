@@ -91,5 +91,17 @@ export class CdkEc2InstanceSampleStack extends Stack {
     // ユーザーデータにてApacheサーバーをインストール
     const userData = readFileSync('./lib/user-dta.sh', 'utf8');
     instance.addUserData(userData);
+
+    // セッションマネージャーで、ポートフォワード開始
+    new CfnOutput(this, 'StartPortForwardingSession', {
+      value: `aws ssm start-session --target ${instance.instanceId} --document-name AWS-StartPortForwardingSession --parameters '{"portNumber":["22"],"localPortNumber":["10022"]}'`,
+      description: 'StartPortForwardingSession',
+    });
+
+    // セッションマネージャーでセッションの接続
+    new CfnOutput(this, 'StartSession', {
+      value: `aws ssm start-session --target ${instance.instanceId}`,
+      description: 'StartSession',
+    });
   }
 }
