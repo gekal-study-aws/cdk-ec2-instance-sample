@@ -2,6 +2,7 @@ import { Stack, StackProps, RemovalPolicy, CfnOutput, Token } from 'aws-cdk-lib'
 import { Construct } from 'constructs';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
+import { readFileSync } from 'fs';
 
 export class CdkEc2InstanceSampleStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -27,7 +28,7 @@ export class CdkEc2InstanceSampleStack extends Stack {
 
     // キーペア取得コマンドアウトプット
     new CfnOutput(this, 'GetSSHKeyCommand', {
-      value: `aws ssm get-parameter --name /ec2/keypair/${cfnKeyPair.getAtt('KeyPairId')} --region ${this.region} --with-decryption --query Parameter.Value --output text`,
+      value: `aws ssm get-parameter --name /ec2/keypair/${cfnKeyPair.getAtt('KeyPairId')} --region ${this.region} --with-decryption --query Parameter.Value --output text > ~/.ssh/gekal.ppk`,
     });
 
     const role = new iam.Role(this, 'ec2-role', {
@@ -86,5 +87,9 @@ export class CdkEc2InstanceSampleStack extends Stack {
       keyName: Token.asString(cfnKeyPair.ref),
     })
     instance.connections.allowFromAnyIpv4(ec2.Port.tcp(22));
+
+    // ユーザーデータにてApacheサーバーをインストール
+    const userData = readFileSync('./lib/user-dta.sh', 'utf8');
+    instance.addUserData(userData);
   }
 }

@@ -38,15 +38,67 @@
 
 ## おまけ
 
-### SSH 
+### Session Manager経由でSSH接続 
 
-```text
-# SSH over Session Manager
-host i-* mi-*
-    ProxyCommand sh -c "aws ssm start-session --target %h --document-name AWS-StartSSHSession --parameters 'portNumber=%p'"
-```
+1. SSH Config コンフィグ
 
-ssh 
+    > ~/.ssh/config
+    
+    ```text
+    # SSH over Session Manager
+    host i-* mi-*
+        ProxyCommand sh -c "aws ssm start-session --target %h --document-name AWS-StartSSHSession --parameters 'portNumber=%p'"
+    ```
+
+2. 認証キーの取得
+
+    ```bash
+    # CFnの出力情報を参照してください。
+    aws ssm get-parameter --name /ec2/keypair/key-06503a0da556dfad8 --region ap-northeast-1 --with-decryption --query Parameter.Value --output text > ~/.ssh/gekal.ppk
+    # モードを400にする必要がある
+    chmod 400 ~/.ssh/gekal.ppk
+    ```
+
+3. SSH接続
+
+    ```bash
+    # モードを400にする必要がある
+    # chmod 400 ~/.ssh/gekal.ppk
+    ssh -i ~/.ssh/gekal.ppk ec2-user@instance-id
+    ```
+
+### Session ManagerのポートフォワードでVSCode接続
+
+1. SSH Config コンフィグ
+
+    > ~/.ssh/config
+    
+    ```text
+    Host ec2
+        HostName localhost
+        User ec2-user
+        Port 10022
+        IdentityFile ~/.ssh/gekal.ppk
+    ```
+
+2. 認証キーの取得
+
+    ```bash
+    # CFnの出力情報を参照してください。
+    aws ssm get-parameter --name /ec2/keypair/key-06503a0da556dfad8 --region ap-northeast-1 --with-decryption --query Parameter.Value --output text > ~/.ssh/gekal.ppk
+    # モードを400にする必要がある
+    chmod 400 ~/.ssh/gekal.ppk
+    ```
+
+3. ポートフォワード開始
+
+    ```bash
+    aws ssm start-session --target instance-id --document-name AWS-StartPortForwardingSession --parameters '{"portNumber":["22"],"localPortNumber":["10022"]}'
+    ```
+
+4. Connect to Host...
+
+    VS Code から接続します。
 
 ## 参照
 
